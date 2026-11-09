@@ -1,0 +1,26 @@
+{
+  "data_origin": "MIXED \u2014 published product catalog with synthetic searches, premiums and quote outcomes",
+  "catalog_origin": "PUBLISHED_REFERENCE",
+  "activity_origin": "GENERATED_SCENARIO",
+  "catalog_checked_on": "2026-09-20",
+  "as_of_timestamp": "2026-09-20 12:00:00",
+  "timestamp_basis": "Asia/Kolkata wall time, stored as TIMESTAMP_NTZ",
+  "request_count": 100000,
+  "quote_count": 500000,
+  "files": {
+    "plans.csv": {
+      "rows": 30,
+      "sha256": "6dcbe38bc97a09342614da5b54acd73a6959c6d3185c2916e7786d762fd0bafc"
+    },
+    "requests.csv": {
+      "rows": 100000,
+      "sha256": "4f1463f78dcae1b31765c8c9fed698ebdb6bae079cdbda4adac8f8f7c38c0147"
+    },
+    "quotes.csv": {
+      "rows": 500000,
+      "sha256": "9386e140cbee08fd1818b984192ef088d11aa9c36985ae475620a160d4ab2623"
+    }
+  },
+  "delivery_version": 2,
+  "usage": "Fixed supplied delivery; upload the three CSVs through Snowsight. SHA-256 values are reference fingerprints; the SQL loader checks types, row counts and unique keys, not file-byte hashes."
+}

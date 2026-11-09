@@ -1,0 +1,351 @@
+# Unit assertions compare isolated synthetic fixtures with explicit expected output.
+# Catalog provenance fields below are test fixtures, not actual insurer references.
+version: 2
+unit_tests:
+  - name: quote_classification_and_expiry_boundary
+    description: Original values survive while each unusable quote gets the right exclusion reason.
+    model: fct_quote
+    # Keep fixture expiry decisions fixed even when a pipeline run supplies a later time.
+    overrides:
+      vars:
+        as_of_timestamp: '2026-09-20 12:00:00'
+    given:
+      - input: source('insurance', 'plans')
+        rows:
+          - plan_id: P1
+            insurer_name: Assertion Test Insurer
+            plan_name: Assertion Fixture
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            min_entry_age: 18
+            max_entry_age: 65
+            max_adults: 1
+            max_children: 0
+            copay_pct: 20
+            ped_wait_months: 36
+            room_category: SINGLE_PRIVATE_ROOM
+            max_entry_age_unlimited: false
+            max_members: 1
+            product_uin: UNIT-TEST
+            source_url: https://example.invalid/unit-fixture
+            source_note: Isolated synthetic assertion fixture; not a published product.
+            source_checked_on: '2026-09-20'
+            catalog_origin: PUBLISHED_REFERENCE
+      - input: source('insurance', 'requests')
+        rows:
+          - request_id: R1
+            requested_at: '2026-09-19 10:00:00'
+            city: Mumbai
+            state: Maharashtra
+            oldest_age: 35
+            adults: 1
+            children: 0
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            annual_budget_inr: 10000
+            data_origin: GENERATED_SCENARIO
+          - request_id: R2
+            requested_at: '2026-09-19 10:00:00'
+            city: Mumbai
+            state: Maharashtra
+            oldest_age: 70
+            adults: 1
+            children: 0
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            annual_budget_inr: 10000
+            data_origin: GENERATED_SCENARIO
+      - input: source('insurance', 'quotes')
+        rows:
+          - quote_id: Q1
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q2
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-20 12:00:00'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q3
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: DECLINED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: null
+            discount_inr: null
+            annual_premium_inr: null
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q4
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9600
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q5
+            request_id: R1
+            plan_id: UNKNOWN
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q6
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 500000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q7
+            request_id: R2
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q8
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-21 10:00:00'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+    expect:
+      rows:
+        - quote_id: Q1
+          comparison_status: AVAILABLE
+          is_available: true
+        - quote_id: Q2
+          comparison_status: EXPIRED
+          is_available: false
+        - quote_id: Q3
+          comparison_status: DECLINED
+          is_available: false
+        - quote_id: Q4
+          comparison_status: INVALID_AMOUNT
+          is_available: false
+        - quote_id: Q5
+          comparison_status: INVALID_REFERENCE
+          is_available: false
+        - quote_id: Q6
+          comparison_status: COVER_MISMATCH
+          is_available: false
+        - quote_id: Q7
+          comparison_status: AGE_INELIGIBLE
+          is_available: false
+        - quote_id: Q8
+          comparison_status: INVALID_DATES
+          is_available: false
+  - name: budget_preference_does_not_hide_available_offer
+    description: An otherwise valid quote above budget remains available with within_budget false.
+    model: fct_quote
+    # Keep fixture expiry decisions fixed even when a pipeline run supplies a later time.
+    overrides:
+      vars:
+        as_of_timestamp: '2026-09-20 12:00:00'
+    given:
+      - input: source('insurance', 'plans')
+        rows:
+          - plan_id: P1
+            insurer_name: Assertion Test Insurer
+            plan_name: Assertion Fixture
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            min_entry_age: 18
+            max_entry_age: 65
+            max_adults: 1
+            max_children: 0
+            copay_pct: 20
+            ped_wait_months: 36
+            room_category: SINGLE_PRIVATE_ROOM
+            max_entry_age_unlimited: false
+            max_members: 1
+            product_uin: UNIT-TEST
+            source_url: https://example.invalid/unit-fixture
+            source_note: Isolated synthetic assertion fixture; not a published product.
+            source_checked_on: '2026-09-20'
+            catalog_origin: PUBLISHED_REFERENCE
+      - input: source('insurance', 'requests')
+        rows:
+          - request_id: R1
+            requested_at: '2026-09-19 10:00:00'
+            city: Mumbai
+            state: Maharashtra
+            oldest_age: 35
+            adults: 1
+            children: 0
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            annual_budget_inr: 9000
+            data_origin: GENERATED_SCENARIO
+      - input: source('insurance', 'quotes')
+        rows:
+          - quote_id: Q1
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+    expect:
+      rows:
+        - quote_id: Q1
+          comparison_status: AVAILABLE
+          within_budget: false
+  - name: published_unlimited_age_and_total_family_limit
+    description: An explicitly unlimited age cap permits age 75; a six-member limit rejects a seven-member
+      family.
+    model: fct_quote
+    # Keep fixture expiry decisions fixed even when a pipeline run supplies a later time.
+    overrides:
+      vars:
+        as_of_timestamp: '2026-09-20 12:00:00'
+    given:
+      - input: source('insurance', 'plans')
+        rows:
+          - plan_id: P1
+            insurer_name: Assertion Test Insurer
+            plan_name: Assertion Fixture
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            min_entry_age: 18
+            max_entry_age: null
+            max_adults: 1
+            max_children: 0
+            copay_pct: 20
+            ped_wait_months: 36
+            room_category: SINGLE_PRIVATE_ROOM
+            max_entry_age_unlimited: true
+            max_members: 1
+            product_uin: UNIT-TEST
+            source_url: https://example.invalid/unit-fixture
+            source_note: Isolated synthetic assertion fixture; not a published product.
+            source_checked_on: '2026-09-20'
+            catalog_origin: PUBLISHED_REFERENCE
+          - plan_id: P2
+            insurer_name: Assertion Test Insurer
+            plan_name: Assertion Fixture
+            policy_type: FAMILY_FLOATER
+            sum_insured_inr: 1000000
+            min_entry_age: 18
+            max_entry_age: null
+            max_adults: 6
+            max_children: 5
+            copay_pct: 20
+            ped_wait_months: 36
+            room_category: SINGLE_PRIVATE_ROOM
+            max_entry_age_unlimited: true
+            max_members: 6
+            product_uin: UNIT-TEST
+            source_url: https://example.invalid/unit-fixture
+            source_note: Isolated synthetic assertion fixture; not a published product.
+            source_checked_on: '2026-09-20'
+            catalog_origin: PUBLISHED_REFERENCE
+      - input: source('insurance', 'requests')
+        rows:
+          - request_id: R1
+            requested_at: '2026-09-19 10:00:00'
+            city: Mumbai
+            state: Maharashtra
+            oldest_age: 75
+            adults: 1
+            children: 0
+            policy_type: INDIVIDUAL
+            sum_insured_inr: 1000000
+            annual_budget_inr: 15000
+            data_origin: GENERATED_SCENARIO
+          - request_id: R2
+            requested_at: '2026-09-19 10:00:00'
+            city: Mumbai
+            state: Maharashtra
+            oldest_age: 35
+            adults: 2
+            children: 5
+            policy_type: FAMILY_FLOATER
+            sum_insured_inr: 1000000
+            annual_budget_inr: 15000
+            data_origin: GENERATED_SCENARIO
+      - input: source('insurance', 'quotes')
+        rows:
+          - quote_id: Q1
+            request_id: R1
+            plan_id: P1
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+          - quote_id: Q2
+            request_id: R2
+            plan_id: P2
+            quoted_at: '2026-09-19 10:00:01'
+            valid_until: '2026-09-26 10:00:01'
+            offer_status: OFFERED
+            currency: INR
+            sum_insured_inr: 1000000
+            base_premium_inr: 10000
+            discount_inr: 500
+            annual_premium_inr: 9500
+            data_origin: GENERATED_SCENARIO
+    expect:
+      rows:
+        - quote_id: Q1
+          comparison_status: AVAILABLE
+          is_available: true
+          within_budget: true
+        - quote_id: Q2
+          comparison_status: HOUSEHOLD_MISMATCH
+          is_available: false
+          within_budget: false

@@ -1,0 +1,36 @@
+# Structural assertions block publication. Known source defects are classified, not hidden.
+version: 2
+models:
+  - name: fct_quote
+    description: Every synthetic response with an explicit availability or exclusion reason.
+    columns:
+      - name: quote_id
+        tests: [not_null, unique]
+      - name: comparison_status
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - AVAILABLE
+                - DECLINED
+                - INVALID_REFERENCE
+                - INVALID_STATUS
+                - INVALID_AMOUNT
+                - INVALID_CURRENCY
+                - COVER_MISMATCH
+                - HOUSEHOLD_MISMATCH
+                - AGE_INELIGIBLE
+                - INVALID_DATES
+                - EXPIRED
+  - name: mart_request_comparison
+    description: One search's available-option count, budget matches and premium range.
+    columns:
+      - name: request_id
+        tests: [not_null, unique]
+  - name: mart_insurer_daily
+    description: Insurer response counts and currently available premium averages by quote day.
+    columns:
+      - name: quote_date
+        tests: [not_null]
+      - name: insurer_name
+        tests: [not_null]

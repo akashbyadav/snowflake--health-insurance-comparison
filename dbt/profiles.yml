@@ -1,0 +1,15 @@
+# Used by the native dbt project inside Snowflake.
+# Account/user are placeholders: execution uses the active Snowflake context.
+# The role, warehouse, database and schema must match sql/01_setup.sql.
+health_insurance_comparison:
+  target: native
+  outputs:
+    native:
+      type: snowflake
+      account: session
+      user: session
+      role: HC_ENGINEER
+      warehouse: HC_WH
+      database: HC_DEMO
+      schema: APP
+      threads: 4

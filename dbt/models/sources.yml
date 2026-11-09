@@ -1,0 +1,33 @@
+# The three source files have different business grains; they are not duplicate copies.
+version: 2
+sources:
+  - name: insurance
+    database: HC_DEMO
+    schema: RAW
+    tables:
+      - name: plans
+        description: Published product configurations with source citations; premiums remain generated.
+        columns:
+          - name: plan_id
+            tests: [not_null, unique]
+      - name: requests
+        description: Synthetic searches, one household profile and requested cover per row.
+        columns:
+          - name: request_id
+            tests: [not_null, unique]
+      - name: quotes
+        description: Synthetic insurer responses, including explicitly generated defects.
+        columns:
+          - name: quote_id
+            tests: [not_null, unique]
+          - name: request_id
+            tests:
+              - not_null
+              - relationships:
+                  to: source('insurance', 'requests')
+                  field: request_id
+      - name: file_controls
+        description: Verified source row counts and load timestamps for the three supplied CSVs.
+        columns:
+          - name: file_name
+            tests: [not_null, unique]
